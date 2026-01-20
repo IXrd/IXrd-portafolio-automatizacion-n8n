@@ -79,7 +79,7 @@ Este proyecto requiere una instancia de n8n (self-hosted o cloud).
     * Instancia de Redis.
 
 2.  **Importar Flujos:**
-    * Importar los archivos `.json` ubicados en la carpeta `/workflows` dentro de n8n.
+    * Importar los archivos `.json` ubicados en la carpeta `/N8N GITHUB REPO` dentro de n8n.
 
 3.  **Configurar Credenciales:**
     * Configurar los nodos de credenciales para OpenAI, Supabase, Redis y Airtable dentro del editor de n8n.
