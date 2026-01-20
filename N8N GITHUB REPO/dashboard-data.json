@@ -1,0 +1,157 @@
+{
+  "name": "dashboard-data",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "dashboard-stats",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ade83f2e-c485-4134-a4d2-7402ffc0d208",
+      "name": "Webhook",
+      "webhookId": "437a7d0c-9d78-40ea-86e8-8d89db66f7e9"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "n8n_chat_histories",
+        "limit": 500,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "created_at",
+              "condition": "gte",
+              "keyValue": "={{ $node[\"Code\"].json.rangoBusquedaInicio }}"
+            },
+            {
+              "keyName": "created_at",
+              "condition": "lte",
+              "keyValue": "={{ $node[\"Code\"].json.rangoBusquedaFin }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3ba792e3-48c9-4203-9935-d117a318f879",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputs = $input.item.json;\nconst params = { ...inputs.query, ...inputs.body };\n\nconst ahora = new Date();\nlet mesInput = params.mes ? parseInt(params.mes) : null;\nlet anoInput = params.ano ? parseInt(params.ano) : null;\n\n// Lógica de selección (Mes Actual)\nlet mes = (mesInput !== null && !isNaN(mesInput)) ? mesInput - 1 : ahora.getMonth();\nlet ano = (anoInput !== null && !isNaN(anoInput)) ? anoInput : ahora.getFullYear();\n\nif (mes < 0) mes = 0;\n\n// 1. Rango del MES SELECCIONADO (Actual)\nconst inicioActual = new Date(ano, mes, 1, 0, 0, 0, 0);\nconst finActual = new Date(ano, mes + 1, 0, 23, 59, 59, 999);\n\n// 2. Rango del MES ANTERIOR (Comparativa)\n// Clonamos la fecha de inicio y restamos 1 mes\nconst inicioPasado = new Date(inicioActual);\ninicioPasado.setMonth(inicioPasado.getMonth() - 1);\n// El fin del pasado es 1 milisegundo antes del inicio del actual\nconst finPasado = new Date(inicioActual.getTime() - 1);\n\nconst nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];\n\nreturn {\n  // Rango TOTAL (Desde inicio del pasado hasta fin del actual) para Supabase\n  rangoBusquedaInicio: inicioPasado.toISOString(),\n  rangoBusquedaFin: finActual.toISOString(),\n  \n  // Cortes para separar la data después\n  corteInicioActual: inicioActual.toISOString(),\n  \n  tituloPeriodo: `${nombresMeses[mes]} ${ano}`,\n  debug: { mes, ano }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9d0e40bb-91bf-4d39-a607-f7161cc4c1ae",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(item => item.json).filter(msg => msg.id || msg.created_at);\nconst fechaCorte = new Date($node[\"Code\"].json.corteInicioActual); // Cuándo empieza el mes actual\n\n// 1. Separar en dos cubetas\nconst msgsActuales = [];\nconst msgsPasados = [];\n\nitems.forEach(msg => {\n    if (!msg.created_at) return;\n    const fechaMsg = new Date(msg.created_at);\n    \n    // Si es después del corte, es del mes actual. Si no, es del pasado.\n    if (fechaMsg >= fechaCorte) {\n        msgsActuales.push(msg);\n    } else {\n        msgsPasados.push(msg);\n    }\n});\n\n// 2. Filtrar solo humanos (Tu lógica pro)\nconst humanosActual = msgsActuales.filter(m => m.message?.type === 'human');\nconst humanosPasado = msgsPasados.filter(m => m.message?.type === 'human');\n\n// 3. Función para calcular variación porcentual\nfunction calcularVariacion(actual, pasado) {\n    if (pasado === 0) return actual > 0 ? \"+100%\" : \"0%\"; // Evitar división por cero\n    const diff = actual - pasado;\n    const porcentaje = (diff / pasado) * 100;\n    const signo = porcentaje > 0 ? \"+\" : \"\";\n    return `${signo}${porcentaje.toFixed(1)}%`;\n}\n\n// 4. Calcular KPIs Actuales\nconst kpisActual = {\n    total: humanosActual.length,\n    leads: humanosActual.filter(m => (m.message?.content || \"\").toLowerCase().match(/precio|cuesta/)).length,\n    financ: humanosActual.filter(m => (m.message?.content || \"\").toLowerCase().match(/financ|banco/)).length,\n    unicos: new Set(msgsActuales.map(m => m.session_id)).size\n};\n\n// 5. Calcular KPIs Pasados (Para comparar)\nconst kpisPasado = {\n    total: humanosPasado.length,\n    leads: humanosPasado.filter(m => (m.message?.content || \"\").toLowerCase().match(/precio|cuesta/)).length,\n    financ: humanosPasado.filter(m => (m.message?.content || \"\").toLowerCase().match(/financ|banco/)).length,\n    unicos: new Set(msgsPasados.map(m => m.session_id)).size\n};\n\n// 6. Generar Gráficos (Solo del mes actual)\nconst mensajesPorDia = {};\nconst tiposDeMensaje = {};\n\nmsgsActuales.forEach(msg => {\n    const fecha = msg.created_at.split('T')[0];\n    const tipo = msg.message?.type || \"unknown\";\n    mensajesPorDia[fecha] = (mensajesPorDia[fecha] || 0) + 1;\n    tiposDeMensaje[tipo] = (tiposDeMensaje[tipo] || 0) + 1;\n});\n\nconst dataGraficoLinea = Object.keys(mensajesPorDia).map(f => ({ fecha: f, total: mensajesPorDia[f] })).sort((a,b) => new Date(a.fecha) - new Date(b.fecha));\nconst dataGraficoPastel = Object.keys(tiposDeMensaje).map(k => ({ id: k, label: k, value: tiposDeMensaje[k] }));\n\nreturn {\n  kpis: {\n    total_msgs: kpisActual.total,\n    usuarios_unicos: kpisActual.unicos,\n    leads_hot: kpisActual.leads,\n    financing: kpisActual.financ,\n    // NUEVOS CAMPOS: Variaciones reales\n    var_total: calcularVariacion(kpisActual.total, kpisPasado.total),\n    var_unicos: calcularVariacion(kpisActual.unicos, kpisPasado.unicos),\n    var_leads: calcularVariacion(kpisActual.leads, kpisPasado.leads),\n    var_financing: calcularVariacion(kpisActual.financ, kpisPasado.financ)\n  },\n  charts: {\n    linea: dataGraficoLinea,\n    pastel: dataGraficoPastel\n  },\n  periodo: $node[\"Code\"].json.tituloPeriodo\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "706d49cb-177a-4ed3-96c6-9d5690ab1bd8",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "b42325ee-899b-4f5d-b870-904e0f559ab4",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dcc22c21-462d-489a-b6dd-6920e35d6201",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a4fde7261900b8ea55aee4e6323f2215e4ec7285e5022fa991c1f79f135fd10"
+  },
+  "id": "x5zQL88d5MbMtXRb",
+  "tags": []
+}

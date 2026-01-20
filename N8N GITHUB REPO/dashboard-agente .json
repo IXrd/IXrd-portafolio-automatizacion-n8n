@@ -1,0 +1,295 @@
+{
+  "name": "dashboard agente",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-insights",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f52c2c6a-faa8-440e-bc2f-3bc092f877cc",
+      "name": "Webhook",
+      "webhookId": "82416b04-f8fb-4141-af19-f73c9ad8b7af"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Leer parámetros de la URL (ej: ?mes=11&ano=2025)\nconst query = $input.item.json.query || {};\nconst ahora = new Date();\n\n// 2. Si no envían nada, usamos el mes actual\nlet mes = query.mes ? parseInt(query.mes) - 1 : ahora.getMonth();\nlet ano = query.ano ? parseInt(query.ano) : ahora.getFullYear();\n\n// 3. Calcular inicio y fin del mes seleccionado\nconst inicioMes = new Date(ano, mes, 1, 0, 0, 0, 0);\nconst finMes = new Date(ano, mes + 1, 0, 23, 59, 59, 999);\n\n// 4. Array de nombres para que se vea bonito\nconst nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];\n\nreturn {\n  inicioISO: inicioMes.toISOString(),\n  finISO: finMes.toISOString(),\n  tituloPeriodo: `${nombresMeses[mes]} ${ano}`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "617a6904-4fb7-4cca-8698-660d81117cd8",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Eres un Analista de Ventas Senior. Tu trabajo es leer los chats del mes y responder la pregunta del usuario. Si te piden 'Lead Scoring' o 'Calidad de Leads', analiza las conversaciones y busca usuarios que mostraron clara intención de compra (preguntaron precio, stock, cita). Responde siempre en formato limpio y profesional.",
+              "role": "system"
+            },
+            {
+              "content": "=Aquí están los logs del chat: {{ $node[\"Code1\"].json.chat_consolidado }}. Pregunta del usuario: {{ $node[\"Webhook\"].json.body.query }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        944,
+        0
+      ],
+      "id": "13f0fae2-9f36-44a4-b541-bafa32f5b507",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "n8n_chat_histories",
+        "limit": 500,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "created_at",
+              "condition": "gte",
+              "keyValue": "={{ $node[\"Code\"].json.inicioISO }}"
+            },
+            {
+              "keyName": "created_at",
+              "condition": "lte",
+              "keyValue": "={{ $node[\"Code\"].json.finISO }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        0
+      ],
+      "id": "b7f6f32b-95a7-4882-a7cc-70c80ea913d3",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ \"respuesta\": $node[\"Message a model\"].json.message.content }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1728,
+        0
+      ],
+      "id": "f706d09a-f047-4e8a-87f9-1bba9df63a79",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los mensajes de Supabase\nconst mensajes = $input.all().map(item => item.json);\n\n// Convertirlos a un solo texto legible\nlet chatCompleto = mensajes.map(m => {\n  const fecha = m.created_at || 'Sin fecha';\n  const contenido = m.message?.content || 'Sin texto';\n  const tipo = m.message?.type || 'Desconocido';\n  return `[${fecha}] ${tipo}: ${contenido}`;\n}).join(\"\\n---\\n\");\n\n// Devolver UN solo item con todo el texto\nreturn {\n  chat_consolidado: chatCompleto\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "d5d6f5cd-4a21-40e8-b463-5eb2cae072f9",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "tableId": "chat_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('Webhook').first().json.body.session_id }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "=user"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $node[\"Webhook\"].json.body.query }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "e5cd0438-2724-42e9-9dba-a1cc160834e6",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('Webhook').first().json.body.session_id }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "=assistant"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $node[\"Message a model\"].json.message.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "26a1925e-a7b7-4d2d-9f3f-b5da58441bab",
+      "name": "Create a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1be37d54-c68b-462b-a778-59d5bce5195d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a4fde7261900b8ea55aee4e6323f2215e4ec7285e5022fa991c1f79f135fd10"
+  },
+  "id": "0nYSaS7Ce2qOTn1K",
+  "tags": []
+}

@@ -1,0 +1,133 @@
+{
+  "name": "workflow guardar",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "chat-history",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ec7feae5-82e0-4fb8-b92d-0f797ee3ca4b",
+      "name": "Webhook",
+      "webhookId": "578571d4-90ac-40ed-9dc7-367bf1b9fcc1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $input.all().map(item => item.json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "67d9469b-227f-4b5f-beba-fb748eac829c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "chat_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.query.sessionId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b4a30f27-b023-4484-a826-7def31d8c50c",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "created_at"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "bf78c079-1dd6-495e-804c-6be2afcab795",
+      "name": "Sort"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3a12593c-f9bb-4874-901e-34fbd9180341",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a4fde7261900b8ea55aee4e6323f2215e4ec7285e5022fa991c1f79f135fd10"
+  },
+  "id": "3nteCtfXhqWWJLbI",
+  "tags": []
+}

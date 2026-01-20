@@ -1,0 +1,2665 @@
+{
+  "name": "agente-ventas-whatsapp.json",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "AgenciaBriabel",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -8304,
+        1648
+      ],
+      "id": "a12f3d19-5ea9-4496-8a59-a113eaf1c985",
+      "name": "Webhook",
+      "webhookId": "a55b2e49-a1f9-4896-bf9f-393af271b60e"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.Input }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Vehiculos Chatbot",
+              "description": "=🤖 Prompt para Clasificador de Texto del Chatbot del Dealership\n\n\n🎭 Rol\nEres el clasificador de texto oficial del chatbot de Briabel Motors, un concesionario de vehículos en República Dominicana. Tu función principal es analizar cada mensaje que envía el cliente y determinar su intención para que el asistente virtual pueda responder de forma precisa, rápida y personalizada.\n\n\n🛠️ Herramientas\nOBLIGATORIO\n\n\nUtilizas un modelo de clasificación de texto entrenado para identificar intenciones comunes en el contexto de ventas de vehículos.\n\n\nTienes acceso a una lista de categorías predefinidas que representan los tipos de consultas más frecuentes en el dealership.\n\n\nEste clasificador se integra con el asistente virtual que utiliza Airtable para acceder al catálogo de vehículos y Supabase como RAG para responder sobre ubicación, horarios, bancos de financiamiento, garantías y servicios.\n\n\n📲 Saludo inicial\n(Este clasificador no saluda directamente, pero permite que el asistente virtual lo haga correctamente según la intención detectada.)\n\nPALABRAS CLAVES\n\"Vehiculo\" \"interior\" \"fotos\" \n\n\n⚠️ Reglas globales obligatorias\nOBLIGATORIO\n\n\nSiempre debes devolver una sola categoría por mensaje.\n\n\nSi el mensaje contiene múltiples intenciones, prioriza la más relevante para el flujo del chatbot.\n\n\nNo inventes información ni asumas contexto no presente en el mensaje.\n\n\nSi no puedes determinar la intención con claridad, clasifícalo como \"otro\" con baja confianza.\n\n\nLa salida debe estar en formato JSON con los siguientes campos:\n\n[\n  \"consulta_vehiculo\",           // Preguntas sobre disponibilidad, modelos, precios, tipo de vehículo\n  \"consulta_detalle_vehiculo\",   // Preguntas específicas como millaje, año, historial, modificaciones\n  \"consulta_financiamiento\",     // Preguntas sobre bancos, requisitos, cuotas, planes\n  \"consulta_servicio\",           // Preguntas sobre mantenimiento, garantías, postventa\n  \"saludo\",                      // Mensajes como \"Hola\", \"Buenas\", etc.\n  \"agradecimiento\",              // Mensajes como \"Gracias\", \"Muy amable\"\n  \"otro\"                         // Mensajes que no encajan en las categorías anteriores\n]"
+            },
+            {
+              "category": "FAQ y agendar",
+              "description": "=🧠 Prompt Unificado — Clasificador de Texto (FAQ + Agendamiento)\nRol\nEres el clasificador de texto oficial del chatbot de Briabel Motors (concesionario en República Dominicana). Tu función es identificar la intención principal del mensaje del cliente, priorizando agendamiento de citas cuando esté presente, o clasificando dentro de las FAQ institucionales cuando aplique. El objetivo es activar el módulo correcto del asistente (RAG/Supabase para FAQs o agendamiento/Airtable).\nHerramientas (contexto operativo, no respondas con esto):\n\nDispones de un modelo de clasificación entrenado para detectar FAQ y agendamiento.\nEl asistente usa Supabase (RAG) para recuperar información institucional (ubicación, horarios, bancos, garantías, postventa, requisitos, etc.).\nEl asistente tiene herramientas para agendar citas, enviar confirmaciones y registrar solicitudes en Airtable.\n\n\n⚖️ Reglas Globales (OBLIGATORIAS)\n\nDevuelve exactamente UNA categoría por mensaje.\nSi el mensaje contiene múltiples intenciones y agendamiento está presente, prioriza agendar_cita.\nNo inventes información ni asumas contexto fuera del mensaje.\nSi no puedes determinar la intención con claridad, clasifícalo como otro con baja confianza.\nNo saludes ni converses: solo clasifica.\nLa salida debe ser SOLO JSON, sin texto adicional, con esta forma:\n{\n  \"categoria\": \"string\",\n  \"confianza\": \"alta|media|baja\",\n  \"razon\": \"breve explicación de 1-2 líneas con las palabras clave que gatillaron la clasificación\"\n}\n📦 Categorías permitidas\n[\n  \"agendar_cita\",         // Solicitudes para ver vehículos, coordinar visitas, agendar reuniones o asesoría presencial\n  \"ubicacion\",            // Dirección, cómo llegar, sucursales, mapa\n  \"horarios\",             // Horarios de atención, días feriados\n  \"bancos_financiamiento\",// Bancos asociados, métodos de pago, cuotas, tasas, inicial\n  \"garantias\",            // Cobertura, duración, condiciones, exclusiones\n  \"servicio_postventa\",   // Mantenimiento, revisiones, repuestos, soporte técnico, taller\n  \"requisitos_compra\",    // Documentos, procesos, pasos para adquirir vehículo\n  \"otro\"                  // No encaja en las categorías anteriores\n]\n``\n 🧭Criterios de Priorización\n\nagendar_cita domina sobre cualquier otra intención si hay señales como: “agendar”, “cita”, “visita”, “ver el carro”, “pasar por el dealer”, “coordinar”, “hacer una cita”, “quiero una asesoría”, “prueba de manejo” (si explícitamente pide coordinar).\nSi no hay intención de agendar, clasifica en FAQ según las palabras clave y el contexto del mensaje.\nSi el mensaje es ambiguo, corto y sin señales claras → otro con baja confianza.\n\n🧪 Heurística de Confianza (guía)\n\nAlta: menciona explícitamente la intención con palabras clave claras y sin ambigüedad.\nMedia: hay señales fuertes pero podría confundirse con otra categoría.\nBaja: el texto es vago, incompleto o no encaja.\n\n\n``\n\n"
+            },
+            {
+              "category": "Otro",
+              "description": "Saludos, nombre y cosas asi"
+            }
+          ]
+        },
+        "options": {
+          "multiClass": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -3872,
+        1360
+      ],
+      "id": "3be0bb2b-ea53-4ae1-a90c-d21b3324be8e",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3808,
+        1664
+      ],
+      "id": "d32da421-fcf7-401e-93ab-635a1df96d24",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Text Classifier').item.json.Input }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=🎭 Rol:\nSoy un asistente virtual amable, profesional y eficiente de un concesionario de vehículos. Estoy diseñado para atender consultas de clientes sobre vehículos disponibles, precios, financiamiento, ubicación, horarios y otros servicios relacionados. Mi objetivo es brindar respuestas claras, útiles y personalizadas que ayuden al cliente a tomar decisiones informadas.\n\n🛠️ Herramientas:\n\n🗂️ Search records in Airtable: Acceso al catálogo actualizado de vehículos (nuevos y usados), incluyendo fotos, precios, especificaciones, millaje/kilometraje, año, historial de servicio, modificaciones y estado de disponibilidad.\n📚 RAG con Supabase: Acceso a información institucional del dealer como ubicación, horarios, bancos asociados para financiamiento, requisitos de compra, garantías, servicios postventa y más.\n🧠 Think (OBLIGATORIO): Herramienta de razonamiento para analizar solicitudes complejas antes de actuar.\n\n\n📲 Saludo inicial:\n\n¡Hola! 👋 Bienvenido al concesionario. Estoy aquí para ayudarte con cualquier consulta sobre nuestros vehículos disponibles, precios, financiamiento y más. ¿En qué puedo asistirte hoy? 🚗✨\n\n\n⚠️ Reglas globales obligatorias:\n\n1. Saludar siempre con amabilidad y disposición de ayuda.\n2. Identificar la intención del cliente: ¿Pregunta por vehículos, precios, ubicación, horarios o servicios?\n3. Uso obligatorio de Airtable para responder CUALQUIER consulta relacionada con:\n    * Modelos disponibles\n    * Estado de disponibilidad\n    * Precios\n    * Características técnicas\n    * Millaje/kilometraje\n    * Año\n    * Historial de servicio\n    * Modificaciones\n    * Fotos\n4. Uso de Supabase para:\n    * Ubicación del dealer\n    * Horarios\n    * Bancos asociados\n    * Garantías\n    * Servicios postventa\n    * Requisitos de compra\n5. Si el cliente solicita información específica de un vehículo, buscar en Airtable y responder con precisión.\n6. Si algún dato no está disponible, informar con transparencia y ofrecer alternativas o seguimiento.\n7. Adaptar la respuesta al mensaje del cliente, evitando respuestas genéricas.\n8. Ofrecer enviar fotos, ficha técnica, opciones de financiamiento o agendar una visita.\n9. Si el mensaje no está relacionado con vehículos o servicios del dealer, responder con cortesía y redirigir.\n10. Mantener un tono cordial, claro y profesional en todo momento.\n11. No inventar información ni hacer promesas sin respaldo.\n12. Finalizar cada interacción ofreciendo ayuda adicional o seguimiento.\n13. ⛔ ¡ALERTA DE FOTO! DEBES REVISAR: Si la herramienta 'Search records in Airtable' devuelve resultados con URLs de fotos de **varios vehículos diferentes**, o si la URL de una foto NO menciona el modelo/marca que el cliente solicitó, DEBES EXCLUIR esa URL del JSON de salida. SOLO incluye fotos del vehículo explícitamente preguntado.\n\n⛔ REGLA DE ORO INQUEBRANTABLE (IGNORAR ESTO ROMPE EL FLUJO) ⛔\n\nLas URLs de las fotos de los vehículos que obtienes de Airtable son **TEMPORALES** y **expiran** después de unos minutos.\n\n1. Por esta razón, tienes **PROHIBIDO** usar la memoria de la conversación (Postgres Chat Memory) para responder a consultas sobre vehículos.\n2. Estás **OBLIGADO** a usar la herramienta `Search records in Airtable` **CADA VEZ** que el cliente pregunte por un vehículo (modelo, precio, características, fotos, etc.).\n3. Debes ejecutar la herramienta **INCLUSO SI YA HAS BUSCADO ESE MISMO VEHÍCULO ANTES** en esta conversación.\n4. Ignorar esta regla causará un error 404 y fallará la entrega de fotos. NO HAY EXCEPCIONES."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2672,
+        768
+      ],
+      "id": "dfb2caf6-b7c7-4b5b-bce9-4d83517b79d1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"respuesta\": {\n    \"texto\": \"¡Claro! El Toyota Hilux 2022 que tenemos disponible tiene 35,000 km, está en excelente estado, sin modificaciones, y cuenta con historial de servicio completo. Su precio actual es de $28,500. ¿Desea que le envíe fotos o agendar una visita?\",\n    \"imagenes\": [\n      {\n        \"url\": \"https://dealer.com/images/toyota-hilux-2022-frontal.jpg\",\n        \"descripcion\": \"Vista frontal del Toyota Hilux 2022\"\n      },\n      {\n        \"url\": \"https://dealer.com/images/toyota-hilux-2022-interior.jpg\",\n        \"descripcion\": \"Interior del Toyota Hilux 2022\"\n      }\n    ],\n    \"acciones\": [\n      {\n        \"tipo\": \"enviar_ficha_tecnica\",\n        \"vehiculo_id\": \"hilux2022\",\n        \"descripcion\": \"Enviar ficha técnica completa del Toyota Hilux 2022\"\n      },\n      {\n        \"tipo\": \"agendar_visita\",\n        \"descripcion\": \"Agendar cita para ver el vehículo en persona\"\n      },\n      {\n        \"tipo\": \"consultar_financiamiento\",\n        \"descripcion\": \"Consultar opciones de financiamiento disponibles\"\n      }\n    ],\n    \"categoria\": \"consulta_detallada_vehiculo\"\n  }\n}\n\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2288,
+        1008
+      ],
+      "id": "5ac2b63c-1cdc-4f28-8061-4a2ad1b46b8e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        -2144,
+        1024
+      ],
+      "id": "6549570a-9d2f-4097-a26e-137eee987814",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Webhook').item.json.body.data.key.remoteJid }}",
+        "messageData": "={{ JSON.stringify($('Edit Fields4').item.json.body) }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -7424,
+        1296
+      ],
+      "id": "17848d6f-cd25-4c3c-bfe6-1b8b8bea11c1",
+      "name": "Insertar",
+      "credentials": {
+        "redis": {
+          "id": "7r4LJrXssVM46J7c",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "mensaje",
+        "key": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -7200,
+        1312
+      ],
+      "id": "1ae039bd-6505-4111-9070-293da30f89fa",
+      "name": "CACHAR INFO",
+      "credentials": {
+        "redis": {
+          "id": "7r4LJrXssVM46J7c",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).data.key.remoteJid }}",
+                    "rightValue": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "342f8e42-f993-40d8-9188-5b501338a035"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NADA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dee9248c-bc58-4d0d-80f4-eba8bafba419",
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).data.messageTimestamp * 1000 }}",
+                    "rightValue": "={{ $now.minus(15,'seconds').toMillis() }}",
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AGARRAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1515c3b-6a0a-463a-a3e9-171eed40ecb6",
+                    "leftValue": "={{ JSON.parse($json.mensaje.first()).data.key.remoteJid }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NO EXISTE"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "POLICIA"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -6896,
+        1328
+      ],
+      "id": "5b7a6bf3-f0d9-40c8-9c20-7b28fb9927c2",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -6656,
+        1520
+      ],
+      "id": "f39d2df1-5c8d-46bf-82ee-8a909bb95a0b",
+      "name": "Wait",
+      "webhookId": "42f5be52-c83d-4bd9-bb84-69722948e891"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -6592,
+        1328
+      ],
+      "id": "38a519fe-475a-4deb-af7a-93570362c22e",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "7r4LJrXssVM46J7c",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "mensaje",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        1360
+      ],
+      "id": "757eec4b-0498-490d-b43d-c213586a219a",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.data.message.conversation }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $json.date_time }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -5600,
+        1280
+      ],
+      "id": "5d2ab926-6dc7-47df-84af-21a5229e21c1",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "hora_llegada"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        -4032,
+        1072
+      ],
+      "id": "4bf89575-53e6-41a5-b796-1f886d75d5dd",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "mensaje"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -4688,
+        1376
+      ],
+      "id": "f742fe3e-3572-47b6-abf4-e44ee1da7a5f",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bc6147a-2246-4d74-833b-bc694f075aeb",
+              "name": "Input",
+              "value": "={{ $json.mensaje.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4352,
+        1376
+      ],
+      "id": "1b5a3304-1a3f-47cb-8ca6-ac831d53f1fb",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.mensaje) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6416,
+        1152
+      ],
+      "id": "c6f44f1e-cde9-4fa8-8883-9c8d893bdb99",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -6736,
+        1120
+      ],
+      "id": "48484e9c-d701-402d-934d-3368462c02a5",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -6672,
+        1808
+      ],
+      "id": "8dbbca3b-4159-45c4-92db-a63584afc18e",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.messageType }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "20dd2c64-e7ff-416f-a972-953f645ce11b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1fcd18f0-0b0a-4b58-9242-0bb6d276ba0c",
+                    "leftValue": "={{ $json.data.messageType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fc8a2475-2689-4697-ac02-454f0cc873a6",
+                    "leftValue": "={{ $json.data.message.conversation }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXTO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -6176,
+        1040
+      ],
+      "id": "a6c8f5ce-9c12-47f6-86e9-216012c71708",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.mediaType }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4ad8004f-f867-497a-9de8-4c4d901f974c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "93275bc1-904c-4af8-a9a5-a319642b58c2",
+                    "leftValue": "={{ $json.data.mediaType }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IMAGEN"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -5520,
+        816
+      ],
+      "id": "8f2339a4-dad8-4e02-b328-b4addcf73d43",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -5184,
+        1008
+      ],
+      "id": "8809bd64-0646-4c37-b456-96fc3d36ed0c",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -4304,
+        1040
+      ],
+      "id": "0a412bb0-2865-47fc-b7d5-d6867b44bf46",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $('Switch1').item.json.date_time }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4832,
+        928
+      ],
+      "id": "f97496ee-3957-4c3d-b4a2-6d5f9cba2456",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $('Switch1').item.json.date_time }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4576,
+        640
+      ],
+      "id": "588b7355-7b64-4c54-bd9f-5d08e901ae3e",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35e1061d-69e7-4800-a6ab-42de43f71524",
+              "name": "body.key",
+              "value": "={{ $('Webhook').item.json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "3faa58fb-b3fd-443e-83df-45c1d542806f",
+              "name": "body",
+              "value": "={{ $('Webhook').item.json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -7536,
+        1648
+      ],
+      "id": "3a4ab462-55c6-4c24-abbc-9804ff3ed7ca",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "get-media-base64",
+        "instanceName": "Agencia Briabel",
+        "messageId": "={{ $json.data.key.id }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -5744,
+        800
+      ],
+      "id": "14eaa6a3-571d-4c53-ba34-7e662379e345",
+      "name": "Evolution API1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "9tJzUCHdYRgmc4v3",
+          "name": "Brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -5296,
+        688
+      ],
+      "id": "e6dd89c5-e869-477f-94d8-5d82c23ea3bf",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -5232,
+        848
+      ],
+      "id": "c857890f-f6be-4d7a-8d74-17333f6fe6e2",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el archivo binario\nconst inputData = $input.all();\n\n// Procesar cada item\nconst outputData = inputData.map(item => {\n  // Crear nuevo objeto con los datos modificados\n  const newItem = {\n    ...item,\n    binary: {}\n  };\n\n  // Procesar cada archivo binario en el item\n  Object.keys(item.binary || {}).forEach(key => {\n    const binaryData = item.binary[key];\n    \n    // Modificar las propiedades del archivo\n    newItem.binary[key] = {\n      ...binaryData,\n      fileName: binaryData.fileName.replace(/\\.[^.]+$/, '.ogg'), // Cambiar extensión a .ogg\n      fileExtension: 'ogg',\n      mimeType: 'audio/ogg'\n    };\n  });\n\n  return newItem;\n});\n\nreturn outputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5072,
+        688
+      ],
+      "id": "9d713e08-bf87-4379-b0b3-71b134ed4944",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -4784,
+        688
+      ],
+      "id": "be7963b7-e274-453e-aeb7-ddf5c4f487d7",
+      "name": "OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "Eres un experto para describir imagenes para un chatbot, responde lo que ves en la imagen de esta manera, \"El usuario mando una imagen etc...\"",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -5024,
+        864
+      ],
+      "id": "146d91bc-5a98-45b2-ad18-dacb88e9a854",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Agencia Briabel",
+        "remoteJid": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+        "messageText": "={{ $json.output.respuesta.texto }}",
+        "options_message": {
+          "delay": 3000
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        448
+      ],
+      "id": "2b76cdd5-12d8-46cd-acad-067f0ef824e2",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "9tJzUCHdYRgmc4v3",
+          "name": "Brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appdrIOgGHDtrMVkm",
+          "mode": "list",
+          "cachedResultName": "Vehiculos en stock",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblpPFagaqmolnspD",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm/tblpPFagaqmolnspD"
+        },
+        "filterByFormula": "=",
+        "options": {
+          "downloadFields": [
+            "Fotos"
+          ],
+          "fields": [
+            "Marca",
+            "Modelo",
+            "Precio",
+            "Estado",
+            "Año",
+            "Kilometraje",
+            "Color",
+            "Combustible",
+            "Motor",
+            "Transmisión",
+            "Modificaciones",
+            "Fotos",
+            "Tipo de vehiculo"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -2496,
+        1024
+      ],
+      "id": "6e107757-a92f-41c8-8af3-037f91f2a085",
+      "name": "Search records in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XlhrLgSmkFo0vC0q",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "412ccc38-c422-454e-95cf-4040c9834ab9",
+              "leftValue": "={{ $json.output.respuesta.imagenes }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -2304,
+        768
+      ],
+      "id": "ea9dda97-3b91-4357-93b2-cc251a0fc530",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.respuesta.imagenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        768
+      ],
+      "id": "d45b5968-f2c5-4ce3-8fe1-a81ae9fc1c7b",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Work with the data of my dealer",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -1968,
+        992
+      ],
+      "id": "6a4df63e-bd36-4792-bdf2-e16004ea8673",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2000,
+        1184
+      ],
+      "id": "9e61dcb5-2027-48c6-9fa6-5ca71501b6ef",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1W3Za8XfgpqJKUtHRG5o8h5Tre2l1T094",
+          "mode": "list",
+          "cachedResultName": "RAGG",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1W3Za8XfgpqJKUtHRG5o8h5Tre2l1T094"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -7152,
+        2768
+      ],
+      "id": "c7bae5af-8350-470c-8d10-7ca1d80ee88a",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Gn4pVrYj1WfLyJhE",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2784
+      ],
+      "id": "2ab15a6d-2441-4369-b770-12996b59b122",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -5648,
+        2816
+      ],
+      "id": "3a2c67c5-3fc6-48b7-8a03-f6110b08f5bf",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Gn4pVrYj1WfLyJhE",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5104,
+        2640
+      ],
+      "id": "33a3c4ac-593c-4cde-984a-ed3612375983",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5088,
+        3056
+      ],
+      "id": "3ffc4176-22f4-4f15-98a2-7c97482c5ddd",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        -4688,
+        2640
+      ],
+      "id": "c5d0d4dc-6d4a-4882-8108-b081d2827507",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data || $json.text || $json.concatenated_data }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "id",
+                "value": "={{ $('Edit Fields12').item.json.id }}"
+              },
+              {
+                "name": "nombre",
+                "value": "={{ $('Edit Fields12').item.json.nombre }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -3792,
+        3440
+      ],
+      "id": "b1077dd9-e3fb-412b-aca5-b13e68bcb39e",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields12').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "16Me6n3eKtIW8Pxif038e4Uu119n7S1DC",
+          "mode": "list",
+          "cachedResultName": "DUPLS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/16Me6n3eKtIW8Pxif038e4Uu119n7S1DC"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3696,
+        3184
+      ],
+      "id": "77d7aeb4-605d-43a5-aed1-3ee3ff764946",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Gn4pVrYj1WfLyJhE",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -3776,
+        3568
+      ],
+      "id": "c50989c6-fd7a-47a8-937e-1fcba2f323e4",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields12').item.json.nombre }}",
+                    "rightValue": "xlss",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "5732341c-b4e4-4890-8e94-56297cdb5e2d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "EXCEL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "53e49ad6-bbee-44b9-ba77-fbd8ca369aae",
+                    "leftValue": "={{ $('Edit Fields12').item.json.nombre }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -5264,
+        2816
+      ],
+      "id": "d67a180e-fc4c-4b3e-a04d-4d270fc5feba",
+      "name": "Switch3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -4896,
+        2640
+      ],
+      "id": "eff2efdd-953c-40bc-ac77-d080f4b4de0e",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77dbf4b-a5f1-4bc8-a9fb-33488379b27d",
+              "name": "id",
+              "value": "={{ $('Google Drive Trigger').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "df543fa4-0819-40c7-8d60-a16daa8acc69",
+              "name": "nombre",
+              "value": "={{ $('Google Drive Trigger').item.json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6096,
+        2848
+      ],
+      "id": "8c0329f9-a22a-4bf0-ad7d-3ec1c8bd9490",
+      "name": "Edit Fields12"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -4048,
+        3184
+      ],
+      "id": "63654698-9c69-4c2c-9419-2f3ab536cc59",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4192,
+        3296
+      ],
+      "id": "90931303-bc6e-4904-a68e-21937a6122c0",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Text Classifier').item.json.Input }}",
+        "options": {
+          "systemMessage": "=🎭 Rol del Agente\nEres el asistente virtual oficial de Briabel Motors, concesionario de vehículos en República Dominicana. Cumples dos funciones principales:\n\n\nAgente de Información Institucional (FAQ)\nRespondes de forma clara, amable y precisa a las preguntas frecuentes sobre:\n\nUbicación del dealer\nHorarios de atención\nBancos asociados para financiamiento\nRequisitos para comprar un vehículo\nGarantías ofrecidas\nServicios postventa\nFormas de pago aceptadas\nSeguros disponibles\n\n\n\nAgente de Agendamiento de Citas\nAyudas a coordinar solicitudes de citas para atención personalizada, recopilando datos del cliente y del vehículo de interés, y registrando la solicitud en las herramientas correspondientes.\n\n\n\n🛠️ Herramientas Obligatorias\n\nSupabase: Para acceder a toda la información institucional del dealer.\nAirtable – Solicitudes de Agendamiento: Para registrar las solicitudes de citas.\nAirtable – Clientes Agendados: Para registrar los datos del cliente.\nTool – Enviarmensajesalosempleados: Para enviar la solicitud al subagente humano.\nFecha actual: {{ $now }}\nThink: Lo vas a usar para pensar razonalmente\n\n\n📲 Saludo Inicial\n¡Hola! 👋 Soy el asistente virtual de Briabel Motors. Estoy aquí para ayudarte con cualquier pregunta sobre nuestros servicios, ubicación, horarios, garantías y también para coordinar tu cita si deseas visitar nuestro concesionario. ¿En qué puedo ayudarte hoy?\n\n📋 Datos que debes recopilar para agendamiento\n\nNombre del cliente (si lo proporciona)\n{{ $('Edit Fields4').item.json.body.data.key.remoteJid }} Este no lo pidas\nVehículo de interés (marca y modelo) *Si el cliento lo menciono ya no se lo pidas*\nFecha y hora sugerida (si la menciona)\nEstado inicial: “Pendiente”\n\n\n✅ Flujo de trabajo obligatorio para agendamiento\n\n\nRecopilar los datos del cliente.\n\n\nRegistrar en Airtable – Solicitudes de Agendamiento.\n\n\n\n\n\nRegistrar en Airtable – Clientes Agendados:\n\nNombre del cliente\nRemoteID\nFecha de registro\n\n\n\n\n⚠️ Reglas Globales\n\nSolo responde preguntas frecuentes institucionales.\nSi el cliente pregunta por vehículos específicos (disponibilidad, precios, características), redirige la consulta al agente de vehículos.\nUtiliza Supabase para recuperar la información exacta y actualizada.\nNo inventes respuestas ni asumas datos que no estén en la base de conocimiento.\nMantén un tono cordial, profesional y directo.\nSi no encuentras una respuesta en Supabase, responde con cortesía y ofrece escalar la consulta a personal del dealer.\nNo dupliques respuestas si ya se ha respondido la misma pregunta en la conversación.\nNo agendes directamente; solo coordina la solicitud.\nNo pidas número de teléfono ni datos sensibles.\nNo dupliques registros en Airtable.\nFinaliza la conversación con:\nGracias por tu interés 😊. Un personal del dealer te estará escribiendo en breve para coordinar tu cita y darte seguimiento.\n*obligatorio al registrar despues de airtable*\nEnviar mensaje al subagente Enviarmensajesalosempleados con:\nNombre del cliente: {{\"Nombre del cliente\"}}\nRemoteID: {{ $('Edit Fields4').item.json.body.data.key.remoteJid }}\nVehículo de interés: \nFecha y hora: {{ \"Fecha y Hora\" }} (mandaselo de una manera limpia no en forma iso)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2544,
+        1376
+      ],
+      "id": "3c6c17ad-c5e1-4610-abe4-36959560c8ec",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2640,
+        1696
+      ],
+      "id": "f0f569b9-9631-4d53-bd20-e99e2c331530",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.data.key.remoteJid }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -2496,
+        1696
+      ],
+      "id": "a23d542f-63eb-40d6-bf5a-a0816b28b891",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "mgcnW28l0r1WgszJ",
+          "name": "dealer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Work with the data of my dealer",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -2160,
+        1712
+      ],
+      "id": "95c75e73-4d09-4051-b2e2-56527496f47c",
+      "name": "Supabase Vector Store2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KiPrYFrMt1OnsTnB",
+          "name": "brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2048,
+        1872
+      ],
+      "id": "0047b4ab-dd72-4a41-abef-72e842ba928f",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        -2352,
+        1696
+      ],
+      "id": "e747f18e-c5f0-4414-b725-df93fa1724c5",
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Agencia Briabel",
+        "remoteJid": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+        "messageText": "={{ $json.output }}",
+        "options_message": {
+          "delay": 3000
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -1904,
+        1488
+      ],
+      "id": "9756274d-46b8-4046-a3c6-70425cf63a72",
+      "name": "Enviar texto1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "9tJzUCHdYRgmc4v3",
+          "name": "Brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appdrIOgGHDtrMVkm",
+          "mode": "list",
+          "cachedResultName": "Vehiculos en stock",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblv6C08J2e1lyHLY",
+          "mode": "list",
+          "cachedResultName": "Clientes",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm/tblv6C08J2e1lyHLY"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre del cliente": "={{ $fromAI(\"name\") }}",
+            "Phone": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+            "Marca": "={{ $fromAI(\"Brand\") }}",
+            "Modelo": "={{ $fromAI(\"Model\") }}",
+            "Fecha y Hora": "={{ $fromAI(\"date_and_hour\") }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre del cliente",
+              "displayName": "Nombre del cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Marca",
+              "displayName": "Marca",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Modelo",
+              "displayName": "Modelo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha y Hora",
+              "displayName": "Fecha y Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Seguimiento",
+              "displayName": "Seguimiento",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Recordado",
+                  "value": "Recordado"
+                },
+                {
+                  "name": "Completado",
+                  "value": "Completado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -2784,
+        1696
+      ],
+      "id": "443ed458-6c20-465d-8774-efdb6ae93f3f",
+      "name": "Create a record in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XlhrLgSmkFo0vC0q",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2816,
+        976
+      ],
+      "id": "9c203c4a-1de8-4d42-8dec-83cc401132ec",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "XhHQznqhkXuoY40Y",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "chLQt9yKu8j6CiRd",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/chLQt9yKu8j6CiRd",
+          "cachedResultName": "My workflow 9"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2944,
+        1712
+      ],
+      "id": "2645a25f-a866-4c81-8868-457df658b460",
+      "name": "Enviarmensajesalosempleados"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appdrIOgGHDtrMVkm",
+          "mode": "list",
+          "cachedResultName": "Vehiculos en stock",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblXk9B8yRqoeO8GV",
+          "mode": "list",
+          "cachedResultName": "Clientes Agendados",
+          "cachedResultUrl": "https://airtable.com/appdrIOgGHDtrMVkm/tblXk9B8yRqoeO8GV"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre del cliente": "={{ $fromAI(\"name\") }}",
+            "Phone": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre del cliente",
+              "displayName": "Nombre del cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "humano",
+                  "value": "humano"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -2240,
+        1696
+      ],
+      "id": "1dd1910a-2376-4c27-a636-80495e434bda",
+      "name": "Clientes Agendados",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XlhrLgSmkFo0vC0q",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "operation": "send-image",
+        "instanceName": "Agencia Briabel",
+        "remoteJid": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+        "media": "={{ $json.url }}",
+        "options_message": {
+          "delay": 3000
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        768
+      ],
+      "id": "db27d23c-d9e7-4005-93b3-8bacfaadc2a7",
+      "name": "Enviar imagem",
+      "credentials": {
+        "evolutionApi": {
+          "id": "9tJzUCHdYRgmc4v3",
+          "name": "Brian"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://chatwoot-chatwoot.phfole.easypanel.host/api/v1/accounts/2/conversations/{{ $json.body.data.chatwootConversationId }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -8048,
+        1648
+      ],
+      "id": "d8571fba-4636-4956-816f-fa47c2c22147",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Exz4KZnvFzBRLK6d",
+          "name": "Chatwoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f34597fc-8d82-49be-a307-f1460bbf8782",
+              "leftValue": "={{ $json.payload[0] }}",
+              "rightValue": "agente_desactivado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -7824,
+        1648
+      ],
+      "id": "29ba75e3-73e2-4172-8de1-3ddd305cc99e",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "read-messages",
+        "instanceName": "Agencia Briabel",
+        "remoteJid": "={{ $('Edit Fields4').item.json.body.data.key.remoteJid }}",
+        "messageId": "={{ $('Edit Fields3').item.json.data.key.id }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        992
+      ],
+      "id": "ba0df60c-843b-4555-ad12-ea7eb1231aea",
+      "name": "Marcar mensagens como lidas1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "9tJzUCHdYRgmc4v3",
+          "name": "Brian"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.data.key.remoteJid }}",
+        "contextWindowLength": 3
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -2640,
+        1024
+      ],
+      "id": "9c0a156e-09a3-47cc-8d54-014cad7cb7a2",
+      "name": "Postgres Chat Memory2",
+      "credentials": {
+        "postgres": {
+          "id": "mgcnW28l0r1WgszJ",
+          "name": "dealer"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CACHAR INFO": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Evolution API1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Evolution API1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Insertar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evolution API1": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "OpenAI2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Enviar imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Switch3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch3": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields12": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviarmensajesalosempleados": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clientes Agendados": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        []
+      ]
+    },
+    "Marcar mensagens como lidas1": {
+      "main": [
+        []
+      ]
+    },
+    "Enviar imagem": {
+      "main": [
+        []
+      ]
+    },
+    "Postgres Chat Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2c89401f-1dc7-47c5-ab44-6b911a0fec1d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a4fde7261900b8ea55aee4e6323f2215e4ec7285e5022fa991c1f79f135fd10"
+  },
+  "id": "EKvv0eX17Dvxbr5u",
+  "tags": []
+}
